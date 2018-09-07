@@ -1,5 +1,6 @@
+#include "Arduino.h"
 #include <ESP8266WiFi.h>
-#include "DHT.h"
+#include <DHTNew.h>
 
 // For SSID(MYSSID) name and password(PASSWORD)
 #include "secrets.h"
@@ -11,7 +12,7 @@
 #define JSON true
 
 // ---- Definitions ----
-#define DHTTYPE DHT11
+#define DHTTYPE DHT_MODEL_DHT11
 #define PORT 80
 #define BUFFERSIZE 7
 
@@ -28,11 +29,14 @@ DHT dht(DHTPin, DHTTYPE);
 static char celsiusBuffer[BUFFERSIZE];
 static char humidityBuffer[BUFFERSIZE];
 
+void deliver_html(WiFiClient *);
+void deliver_json(WiFiClient *);
+
 void setup() {
   #if DEBUG
     Serial.begin(9600);
   #endif
-  
+
   delay(10);
 
   dht.begin();
@@ -89,7 +93,7 @@ void loop() {
             #if DEBUG
               Serial.println("Failed to read from DHT sensor.");
             #endif
-            
+
             strcpy(celsiusBuffer, "failed");
             strcpy(humidityBuffer, "failed");
           } else {
@@ -109,10 +113,10 @@ void loop() {
           #else if JSON
             deliver_json(&client);
           #endif
-          
+
           break;
-        } 
-        
+        }
+
         if (c == '\n') {
           blank_line = true;
         } else if (c != '\r') {
@@ -160,4 +164,3 @@ void deliver_json(WiFiClient *client) {
   client->println(humidityBuffer);
   client->println("}");
 }
-
